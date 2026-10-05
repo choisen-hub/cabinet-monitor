@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>대한민국 국무위원 인사현황 모니터</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="header-title">
+        <span class="flag">🇰🇷</span>
+        <div>
+          <h1>대한민국 국무위원 인사현황</h1>
+          <p class="subtitle">Republic of Korea Cabinet Monitor</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <div class="status-bar">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text">불러오는 중...</span>
+        </div>
+        <div class="last-updated" id="last-updated">마지막 갱신: —</div>
+        <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          새로고침
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-label">총 국무위원</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-changes">—</div>
+        <div class="stat-label">변경 이력</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-source">—</div>
+        <div class="stat-label">데이터 출처</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-next">7일</div>
+        <div class="stat-label">다음 자동 갱신</div>
+      </div>
+    </section>
+
+    <!-- Time Slider -->
+    <section class="panel slider-panel" id="slider-panel" style="display:none">
+      <div class="panel-header">
+        <h2>과거 명단 조회</h2>
+        <button class="btn-ghost" onclick="exitTimeMachine()">현재로 돌아가기 ×</button>
+      </div>
+      <div class="slider-body">
+        <div class="slider-labels">
+          <span id="slider-label-left"></span>
+          <span class="slider-current-label" id="slider-current-label"></span>
+          <span id="slider-label-right"></span>
+        </div>
+        <input type="range" id="time-slider" min="0" max="0" value="0" oninput="onSliderChange(this.value)" />
+        <p class="slider-hint">슬라이더를 움직여 과거 날짜의 국무위원 명단을 확인하세요.</p>
+      </div>
+    </section>
+
+    <div class="content-grid">
+      <!-- Minister cards -->
+      <section class="panel ministers-panel">
+        <div class="panel-header">
+          <h2 id="panel-title">현 내각 구성원</h2>
+          <div class="panel-header-actions">
+            <input class="search-box" id="search" type="text" placeholder="이름 또는 직책으로 검색..." oninput="filterCards()" />
+            <button class="btn-ghost" id="btn-timeline" onclick="openTimeMachine()" title="과거 명단 보기">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              타임머신
+            </button>
+          </div>
+        </div>
+        <div class="cards-grid" id="cards-grid">
+          <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>데이터를 불러오는 중입니다...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Change history -->
+      <aside class="panel history-panel">
+        <div class="panel-header">
+          <h2>인사 변경 이력</h2>
+        </div>
+        <div id="history-list">
+          <div class="empty-state">변경 이력이 없습니다.</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <p>데이터 출처: <a href="https://www.korea.net/Government/Administration/Cabinet" target="_blank">korea.net</a> · <a href="https://www.opm.go.kr" target="_blank">국무조정실</a> · <a href="https://ko.wikipedia.org/wiki/이재명_정부" target="_blank">위키피디아</a></p>
+    <p>매주 1회 자동 갱신됩니다. 공식 임명 정보는 <a href="https://www.korea.kr" target="_blank">정책브리핑</a>을 참고하세요.</p>
+  </footer>
+
+  <!-- Profile Modal -->
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal()"></div>
+  <div class="modal" id="profile-modal" role="dialog" aria-modal="true">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-avatar-wrap">
+      <div id="modal-avatar"></div>
+    </div>
+    <div class="modal-body">
+      <div class="modal-name" id="modal-name"></div>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-appointed" id="modal-appointed"></div>
+      <hr class="modal-divider" />
+      <div class="modal-bio" id="modal-bio">
+        <div class="spinner" style="margin:0 auto"></div>
+      </div>
+      <a class="modal-wiki-link" id="modal-wiki-link" target="_blank" style="display:none">
+        위키피디아에서 더 보기 →
+      </a>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
